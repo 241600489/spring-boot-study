@@ -98,6 +98,8 @@ public class ShiroConfiguration {
 
         shiroFilterFactoryBean.setLoginUrl("/monkey/nologin");
 
+        shiroFilterFactoryBean.setSecurityManager(securityManager);
+
         return shiroFilterFactoryBean;
     }
 

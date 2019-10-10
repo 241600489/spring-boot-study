@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Component
 public class RedisSessionDao extends AbstractSessionDAO {
@@ -20,10 +21,7 @@ public class RedisSessionDao extends AbstractSessionDAO {
     protected Serializable doCreate(Session session) throws UnknownSessionException{
         Assert.notNull(session, "RedisSessionDao.doCreate's argument session is null");
 
-        if (Objects.isNull(session.getId())) {
-            Serializable sessionId = generateSessionId(session);
-            assignSessionId(session,sessionId);
-        }
+        generateSessionForNewSession(session);
 
         String sessionId = session.getId().toString();
         if (sessionExist(sessionId)) {
@@ -34,6 +32,13 @@ public class RedisSessionDao extends AbstractSessionDAO {
         return sessionId;
     }
 
+    private void generateSessionForNewSession(Session session) {
+        if (Objects.isNull(session.getId())) {
+            Serializable sessionId = generateSessionId(session);
+            assignSessionId(session,sessionId);
+        }
+    }
+
     private boolean sessionExist(String sessionId) {
         SessionWrapper sessionWrapper = sessionCache.get(sessionId);
 
@@ -42,11 +47,10 @@ public class RedisSessionDao extends AbstractSessionDAO {
         }
 
         //判断是否超过会话时间
-        long difference = System.currentTimeMillis() - sessionWrapper.getUpdateTime();
-        if (difference > 18000_00L) {
+        if (!sessionWrapper.isValid()) {
             sessionCache.remove(sessionId);
             return false;
-        }‬
+        }
 
         return true;
     }
@@ -59,22 +63,36 @@ public class RedisSessionDao extends AbstractSessionDAO {
             return null;
         }
 
+        sessionWrapper.setUpdateTime(System.currentTimeMillis());
 
-        return null;
+        return sessionWrapper.getSession();
     }
 
     @Override
     public void update(Session session) throws UnknownSessionException {
+        generateSessionForNewSession(session);
 
+        String sessionId = session.getId().toString();
+        if (!sessionExist(sessionId)) {
+            throw new UnknownSessionException("sessionId:" + sessionId + "have not  exist");
+        }
+
+        sessionCache.put(sessionId, new SessionWrapper(session));
     }
 
     @Override
     public void delete(Session session) {
-
+        sessionCache.remove(session.getId().toString());
     }
 
     @Override
     public Collection<Session> getActiveSessions() {
-        return null;
+        return sessionCache.values().stream()
+                .filter(Objects::nonNull)
+                //filter invalid
+                .filter(SessionWrapper::isValid)
+                .map(SessionWrapper::getSession)
+                .collect(Collectors.toList());
     }
+
 }

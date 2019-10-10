@@ -23,4 +23,12 @@ public class SessionWrapper {
     public void setUpdateTime(long updateTime) {
         this.updateTime = updateTime;
     }
+
+    public  boolean isValid() {
+        long difference = System.currentTimeMillis() - getUpdateTime();
+        if(difference > 18000_00L) {
+            return false;
+        }
+        return true;
+    }
 }
