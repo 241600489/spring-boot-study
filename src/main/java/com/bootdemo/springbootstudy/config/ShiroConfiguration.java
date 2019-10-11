@@ -1,6 +1,7 @@
 package com.bootdemo.springbootstudy.config;
 
 import com.bootdemo.springbootstudy.security.MonkeySessionManager;
+import com.bootdemo.springbootstudy.security.PasswordHelper;
 import com.bootdemo.springbootstudy.security.PermissionShiroRealm;
 import com.bootdemo.springbootstudy.security.RedisSessionDao;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
@@ -17,6 +18,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.EnableMBeanExport;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -47,9 +49,9 @@ public class ShiroConfiguration {
     public HashedCredentialsMatcher hashedCredentialsMatcher() {
         HashedCredentialsMatcher hashedCredentialsMatcher = new HashedCredentialsMatcher();
         //设置hash 算法名称
-        hashedCredentialsMatcher.setHashAlgorithmName("MD5");
+        hashedCredentialsMatcher.setHashAlgorithmName(PasswordHelper.HASH_ALGORITHM);
         //set hash iteration counts
-        hashedCredentialsMatcher.setHashIterations(1024);
+        hashedCredentialsMatcher.setHashIterations(PasswordHelper.HASH_ITERATIONS);
 
         hashedCredentialsMatcher.setStoredCredentialsHexEncoded(Boolean.TRUE);
         return hashedCredentialsMatcher;
@@ -92,6 +94,8 @@ public class ShiroConfiguration {
         filterChainDefinitionManager.put("/monkey/logout", "logout");
         filterChainDefinitionManager.put("/monkey/login", "anon");
         filterChainDefinitionManager.put("/monkey/nologin", "anon");
+        filterChainDefinitionManager.put("/monkey/hello", "anon");
+        filterChainDefinitionManager.put("/monkey/register", "anon");
         filterChainDefinitionManager.put("/**", "user");
 
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionManager);
@@ -132,5 +136,11 @@ public class ShiroConfiguration {
         monkeySessionManager.setSessionDAO(redisSessionDao);
 
         return monkeySessionManager;
+    }
+
+
+    @Bean
+    public PasswordHelper passwordHelper() {
+        return new PasswordHelper();
     }
 }

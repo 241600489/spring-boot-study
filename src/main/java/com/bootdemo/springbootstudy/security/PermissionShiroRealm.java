@@ -34,9 +34,9 @@ public class PermissionShiroRealm extends AuthorizingRealm {
         UserInfo userInfo = (UserInfo) principalCollection.getPrimaryPrincipal();
         userInfo.getRoleList().forEach(sysRole -> {
             authorizationInfo.addRole(sysRole.getRole());
-            sysRole.getPermissions().forEach(sysPermission -> {
-                authorizationInfo.addStringPermission(sysPermission.getPermission());
-            });
+            sysRole.getPermissions().forEach(sysPermission ->
+                authorizationInfo.addStringPermission(sysPermission.getPermission())
+            );
         });
         return authorizationInfo;
     }
