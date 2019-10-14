@@ -6,10 +6,7 @@ import com.bootdemo.springbootstudy.service.UserService;
 import com.bootdemo.springbootstudy.vo.UserLoginVo;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/monkey")
@@ -31,5 +28,10 @@ public class UserController {
     @RequestMapping("/register")
     public MonkeyResult register(@RequestBody UserLoginVo userLoginVo) {
         return userService.register(userLoginVo);
+    }
+
+    @GetMapping("/query")
+    public MonkeyResult query() {
+        return MonkeyResult.success("ok");
     }
 }

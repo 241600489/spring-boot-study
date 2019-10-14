@@ -2,6 +2,7 @@ package com.bootdemo.springbootstudy.security;
 
 import com.bootdemo.springbootstudy.repostitry.UserInfo;
 import com.bootdemo.springbootstudy.service.UserService;
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -57,6 +58,7 @@ public class PermissionShiroRealm extends AuthorizingRealm {
         if (Objects.isNull(userInfo)) {
             throw new AuthenticationException("username " + username + " is  not exist");
         }
+        SecurityUtils.getSubject().getSession().setAttribute("monkey_user", userInfo);
 
         SimpleAuthenticationInfo authenticationInfo = new SimpleAuthenticationInfo(userInfo,
                 userInfo.getPassword(), ByteSource.Util.bytes(userInfo.getSalt()),

@@ -1,9 +1,9 @@
 package com.bootdemo.springbootstudy.config;
 
-import com.bootdemo.springbootstudy.security.MonkeySessionManager;
 import com.bootdemo.springbootstudy.security.PasswordHelper;
 import com.bootdemo.springbootstudy.security.PermissionShiroRealm;
 import com.bootdemo.springbootstudy.security.RedisSessionDao;
+import com.bootdemo.springbootstudy.security.ShiroPermissionCheckFilter;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.SecurityManager;
@@ -12,14 +12,17 @@ import org.apache.shiro.spring.LifecycleBeanPostProcessor;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
+import org.apache.shiro.web.servlet.SimpleCookie;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
-import org.springframework.context.annotation.EnableMBeanExport;
 
+import javax.servlet.Filter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -28,6 +31,9 @@ import java.util.Map;
  */
 @Configuration
 public class ShiroConfiguration {
+
+
+
 
     /**
      * LifecycleBeanPostProcessor，这是个DestructionAwareBeanPostProcessor的子类，
@@ -86,9 +92,13 @@ public class ShiroConfiguration {
      * 它主要保持了三项数据，securityManager，filters，filterChainDefinitionManager。
      */
     @Bean(name = "shiroFilter")
-    public ShiroFilterFactoryBean shiroFilterFactoryBean(SecurityManager securityManager) {
+    @ConditionalOnBean
+    public ShiroFilterFactoryBean shiroFilterFactoryBean(SecurityManager securityManager, ShiroPermissionCheckFilter shiroPermissionCheckFilter) {
         ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
 
+        Map<String, Filter> filters = new LinkedHashMap<>();
+        filters.put("permissionCheck", shiroPermissionCheckFilter);
+        shiroFilterFactoryBean.setFilters(filters);
         Map<String, String> filterChainDefinitionManager = new LinkedHashMap<>();
 
         filterChainDefinitionManager.put("/monkey/logout", "logout");
@@ -96,11 +106,11 @@ public class ShiroConfiguration {
         filterChainDefinitionManager.put("/monkey/nologin", "anon");
         filterChainDefinitionManager.put("/monkey/hello", "anon");
         filterChainDefinitionManager.put("/monkey/register", "anon");
-        filterChainDefinitionManager.put("/**", "user");
+        filterChainDefinitionManager.put("/**", "user,permissionCheck");
 
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionManager);
 
-        shiroFilterFactoryBean.setLoginUrl("/monkey/nologin");
+        shiroFilterFactoryBean.setLoginUrl("");
 
         shiroFilterFactoryBean.setSecurityManager(securityManager);
 
@@ -132,9 +142,12 @@ public class ShiroConfiguration {
 
     @Bean
     public DefaultWebSessionManager defaultWebSessionManager(RedisSessionDao redisSessionDao) {
-        MonkeySessionManager monkeySessionManager = new MonkeySessionManager();
+        DefaultWebSessionManager monkeySessionManager = new DefaultWebSessionManager();
         monkeySessionManager.setSessionDAO(redisSessionDao);
-
+        SimpleCookie simpleCookie = new SimpleCookie();
+        simpleCookie.setName("mcId");
+        monkeySessionManager.setSessionIdCookie(simpleCookie);
+        monkeySessionManager.setSessionValidationSchedulerEnabled(true);
         return monkeySessionManager;
     }
 
