@@ -36,7 +36,7 @@ public class PermissionShiroRealm extends AuthorizingRealm {
         userInfo.getRoleList().forEach(sysRole -> {
             authorizationInfo.addRole(sysRole.getRole());
             sysRole.getPermissions().forEach(sysPermission ->
-                authorizationInfo.addStringPermission(sysPermission.getPermission())
+                authorizationInfo.addStringPermission(sysPermission.getUrl())
             );
         });
         return authorizationInfo;
@@ -44,6 +44,7 @@ public class PermissionShiroRealm extends AuthorizingRealm {
 
     /**
      * 认证
+     * 
      *
      * @param authenticationToken
      * @return

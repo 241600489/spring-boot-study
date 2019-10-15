@@ -1,12 +1,10 @@
 package com.bootdemo.springbootstudy.security;
 
 import com.bootdemo.springbootstudy.common.vo.MonkeyResult;
-import com.fasterxml.jackson.databind.util.JSONPObject;
 import org.apache.log4j.Logger;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.filter.authz.PermissionsAuthorizationFilter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -23,7 +21,6 @@ import java.util.Objects;
  * @author pengxu
  * @date 2018/5/12
  */
-@Service(value = "shiroPermissionCheckFilter")
 public class ShiroPermissionCheckFilter extends PermissionsAuthorizationFilter {
 
     public static final String SLASH = "/";

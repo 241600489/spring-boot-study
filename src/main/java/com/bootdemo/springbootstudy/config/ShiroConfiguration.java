@@ -15,8 +15,6 @@ import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.servlet.SimpleCookie;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -87,18 +85,18 @@ public class ShiroConfiguration {
         return securityManager;
     }
 
+
+
     /**
      * ShiroFilterFactoryBean，是个factorybean，为了生成ShiroFilter。
      * 它主要保持了三项数据，securityManager，filters，filterChainDefinitionManager。
      */
     @Bean(name = "shiroFilter")
-    @ConditionalOnBean
-    public ShiroFilterFactoryBean shiroFilterFactoryBean(SecurityManager securityManager, ShiroPermissionCheckFilter shiroPermissionCheckFilter) {
+    public ShiroFilterFactoryBean shiroFilterFactoryBean(SecurityManager securityManager) {
         ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
 
-        Map<String, Filter> filters = new LinkedHashMap<>();
-        filters.put("permissionCheck", shiroPermissionCheckFilter);
-        shiroFilterFactoryBean.setFilters(filters);
+        shiroFilterFactoryBean.setSecurityManager(securityManager);
+
         Map<String, String> filterChainDefinitionManager = new LinkedHashMap<>();
 
         filterChainDefinitionManager.put("/monkey/logout", "logout");
@@ -112,8 +110,10 @@ public class ShiroConfiguration {
 
         shiroFilterFactoryBean.setLoginUrl("");
 
-        shiroFilterFactoryBean.setSecurityManager(securityManager);
 
+        Map<String, Filter> filters = new LinkedHashMap<>();
+        filters.put("permissionCheck", new ShiroPermissionCheckFilter());
+        shiroFilterFactoryBean.setFilters(filters);
         return shiroFilterFactoryBean;
     }
 
@@ -140,7 +140,7 @@ public class ShiroConfiguration {
         return authorizationAttributeSourceAdvisor;
     }
 
-    @Bean
+    @Bean("sessionManager")
     public DefaultWebSessionManager defaultWebSessionManager(RedisSessionDao redisSessionDao) {
         DefaultWebSessionManager monkeySessionManager = new DefaultWebSessionManager();
         monkeySessionManager.setSessionDAO(redisSessionDao);
